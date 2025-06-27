@@ -1,5 +1,5 @@
-import { DiscordSignIn } from "@/components/ui/auth/DiscordSignIn";
-import { GoogleSignIn } from "@/components/ui/auth/GoogleSignIn";
+import { DiscordSignInButton } from "@/components/ui/auth/DiscordSignInButton";
+import { GoogleSignInButton } from "@/components/ui/auth/GoogleSignInButton";
 import { auth } from "@/lib/common/auth";
 import { redirect } from "next/navigation";
 
@@ -10,9 +10,9 @@ const Page = async () => {
 
   return (
     <div className="w-[100vw] full-height-fixed grid place-content-center">
-      <GoogleSignIn />
+      <GoogleSignInButton />
       <div className="h-[10px]" />
-      <DiscordSignIn />
+      <DiscordSignInButton />
     </div>
   );
 };

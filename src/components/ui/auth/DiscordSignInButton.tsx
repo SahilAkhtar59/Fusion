@@ -1,6 +1,6 @@
 import { signIn } from "@/lib/common/auth";
 
-const DiscordSignIn = () => {
+const DiscordSignInButton = () => {
   return (
     <form
       action={async () => {
@@ -15,4 +15,4 @@ const DiscordSignIn = () => {
   );
 };
 
-export { DiscordSignIn };
+export { DiscordSignInButton };

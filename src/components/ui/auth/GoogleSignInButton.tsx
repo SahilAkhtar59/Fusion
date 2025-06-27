@@ -1,6 +1,6 @@
 import { signIn } from "@/lib/common/auth";
 
-const GoogleSignIn = () => {
+const GoogleSignInButton = () => {
   return (
     <form
       action={async () => {
@@ -15,4 +15,4 @@ const GoogleSignIn = () => {
   );
 };
 
-export { GoogleSignIn };
+export { GoogleSignInButton };
