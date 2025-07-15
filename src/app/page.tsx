@@ -1,6 +1,6 @@
-import { LogoutButton } from "@/components/ui/auth/LogoutButton";
-import { SignInButton } from "@/components/ui/auth/SignInButton";
-import { auth } from "@/lib/common/auth";
+import { LogoutButton } from "@/components/auth/LogoutButton";
+import { SignInButton } from "@/components/auth/SignInButton";
+import { auth } from "@/lib/auth";
 
 const Page = async () => {
   const session = await auth();

@@ -1,4 +1,4 @@
-import { signIn } from "@/lib/common/auth";
+import { signIn } from "@/lib/auth";
 
 const GoogleSignInButton = () => {
   return (

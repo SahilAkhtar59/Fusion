@@ -1,6 +1,6 @@
-import { DiscordSignInButton } from "@/components/ui/auth/DiscordSignInButton";
-import { GoogleSignInButton } from "@/components/ui/auth/GoogleSignInButton";
-import { auth } from "@/lib/common/auth";
+import { DiscordSignInButton } from "@/components/auth/DiscordSignInButton";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
 const Page = async () => {
