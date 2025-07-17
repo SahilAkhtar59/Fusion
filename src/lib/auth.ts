@@ -6,13 +6,18 @@ import Google from "next-auth/providers/google";
 import db from "./db";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import "next-auth";
+
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET environment variable is not set");
+}
 
 const credentialsSchema = z.object({
   email: z.string().email("Invalid email address").trim().toLowerCase(),
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
-export const { auth, handlers, signIn } = NextAuth({
+export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: {
     strategy: "jwt",
@@ -23,7 +28,6 @@ export const { auth, handlers, signIn } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
     }),
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID!,
@@ -44,17 +48,43 @@ export const { auth, handlers, signIn } = NextAuth({
           }
 
           const { email, password } = result.data;
+          const normalisedEmail = email.toLowerCase();
 
           // Find user by email.
           const user = await db.user.findUnique({
-            where: { email },
-            select: { id: true, email: true, password: true },
+            where: { email: normalisedEmail },
+            select: {
+              id: true,
+              email: true,
+              password: true,
+              loginAttempts: true,
+              lastLoginAttempt: true,
+            },
           });
+
+          // Basic rate limiting at application level.
+          const FIVE_MINUTES_AGO = new Date(Date.now() - 5 * 60 * 1000);
+          if (
+            user?.loginAttempts > 8 &&
+            user.lastLoginAttempt > FIVE_MINUTES_AGO
+          ) {
+            throw new Error("Account locked. Try again in 5 minutes.");
+          }
 
           // Handle user not found or OAuth account.
           if (!user || !user.password) {
+            await db.user.update({
+              where: { email: normalisedEmail },
+              data: {
+                loginAttempts: { increment: 1 },
+                lastLoginAttempt: new Date(),
+              },
+            });
             throw new Error("Invalid credentials");
           }
+
+          // Time-safe comparison.
+
 
           // Verify password.
           const isValid = await bcrypt.compare(password, user.password);
@@ -77,5 +107,25 @@ export const { auth, handlers, signIn } = NextAuth({
       },
     }),
   ],
-  callbacks: {},
+  callbacks: {
+    async jwt({ token, user }) {
+      // Persist user data in JWT.
+      if (user) {
+        token.id = user.id;
+        token.email = user.email;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/auth/sign-in",
+    error: "/auth/error",
+  },
+  secret: process.env.AUTH_SECRET,
 });
