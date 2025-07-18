@@ -83,14 +83,26 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             throw new Error("Invalid credentials");
           }
 
-          // Time-safe comparison.
-
+          // Timing-safe comparison.
 
           // Verify password.
           const isValid = await bcrypt.compare(password, user.password);
           if (!isValid) {
+            await db.user.update({
+              where: { id: user.id },
+              data: {
+                loginAttempts: { increment: 1 },
+                lastLoginAttempt: new Date(),
+              },
+            });
             throw new Error("Invalid credentials");
           }
+
+          // Reset login attempts on successful login.
+          await db.user.update({
+            where: { id: user.id },
+            data: { loginAttempts: 0 },
+          });
 
           // Return sanitised user object without password.
           return {
@@ -126,6 +138,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
     signIn: "/auth/sign-in",
     error: "/auth/error",
+  },
+  cookies: {
+    sessionToken: {
+      name: `__Secure-authjs.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
   },
   secret: process.env.AUTH_SECRET,
 });
